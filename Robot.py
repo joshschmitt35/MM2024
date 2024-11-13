@@ -1,3 +1,4 @@
+import keyboard
 from gpiozero import OutputDevice, PWMOutputDevice
 from time import sleep
 
@@ -40,23 +41,27 @@ def enable_all_motors(state):
     FL_EN.value = BL_EN.value = FR_EN.value = BR_EN.value = state
 
 try:
-    while True:
-        # Ask the user for the direction
-        direction = int(input("Enter direction for all motors (1 for forward, -1 for backward): "))
-        set_all_motors(direction)
-        enable_all_motors(1)  # Enable all motors
+    print("Control the robot using 'W' (up arrow) for forward and 'S' (down arrow) for backward.")
+    print("Press 'Q' to quit.")
 
-        # Keep motors running until the user wants to stop or change direction
-        while True:
-            command = input("Enter 'stop' to stop all motors or 'change' to change direction: ").strip().lower()
-            if command == 'stop':
-                enable_all_motors(0)  # Disable all motors
-                print("All motors stopped.")
-                break
-            elif command == 'change':
-                break  # Break to the outer loop to change direction
-            else:
-                print("Invalid command. Please enter 'stop' or 'change'.")
+    while True:
+        if keyboard.is_pressed('w') or keyboard.is_pressed('up'):
+            print("Moving forward")
+            set_all_motors(1)
+            enable_all_motors(1)
+            sleep(0.1)  # Add a small delay to avoid rapid toggling
+        elif keyboard.is_pressed('s') or keyboard.is_pressed('down'):
+            print("Moving backward")
+            set_all_motors(-1)
+            enable_all_motors(1)
+            sleep(0.1)
+        elif keyboard.is_pressed('q'):
+            print("Stopping the robot.")
+            enable_all_motors(0)
+            break
+        else:
+            enable_all_motors(0)  # Stop motors when no key is pressed
+            sleep(0.1)
 except KeyboardInterrupt:
     print("Program stopped by user")
     enable_all_motors(0)  # Disable all motors
