@@ -36,6 +36,22 @@ def set_all_motors(direction):
         FR_IN1.value, FR_IN2.value = 0, 1
         BR_IN1.value, BR_IN2.value = 0, 1
 
+def set_left_turn():
+    """Sets motors for turning left."""
+    # Stop left motors, run right motors forward
+    FL_IN1.value, FL_IN2.value = 0, 0
+    BL_IN1.value, BL_IN2.value = 0, 0
+    FR_IN1.value, FR_IN2.value = 1, 0
+    BR_IN1.value, BR_IN2.value = 1, 0
+
+def set_right_turn():
+    """Sets motors for turning right."""
+    # Stop right motors, run left motors forward
+    FL_IN1.value, FL_IN2.value = 1, 0
+    BL_IN1.value, BL_IN2.value = 1, 0
+    FR_IN1.value, FR_IN2.value = 0, 0
+    BR_IN1.value, BR_IN2.value = 0, 0
+
 def enable_all_motors(state):
     """Enables or disables all motors."""
     FL_EN.value = BL_EN.value = FR_EN.value = BR_EN.value = state
@@ -44,22 +60,32 @@ def main(stdscr):
     curses.curs_set(0)  # Hide the cursor
     stdscr.nodelay(1)   # Non-blocking keyboard input
     stdscr.clear()
-    stdscr.addstr("Control the robot using 'W' (up arrow) for forward and 'S' (down arrow) for backward.\n")
+    stdscr.addstr("Control the robot:\n")
+    stdscr.addstr("'W' (up arrow) for forward, 'S' (down arrow) for backward\n")
+    stdscr.addstr("'A' (left arrow) for left, 'D' (right arrow) for right\n")
     stdscr.addstr("Press 'Q' to quit.\n")
 
     try:
         while True:
             key = stdscr.getch()
             if key in [curses.KEY_UP, ord('w')]:
-                stdscr.addstr(3, 0, "Moving forward        ")
+                stdscr.addstr(5, 0, "Moving forward        ")
                 set_all_motors(1)
                 enable_all_motors(1)
             elif key in [curses.KEY_DOWN, ord('s')]:
-                stdscr.addstr(3, 0, "Moving backward       ")
+                stdscr.addstr(5, 0, "Moving backward       ")
                 set_all_motors(-1)
                 enable_all_motors(1)
+            elif key in [curses.KEY_LEFT, ord('a')]:
+                stdscr.addstr(5, 0, "Turning left          ")
+                set_left_turn()
+                enable_all_motors(1)
+            elif key in [curses.KEY_RIGHT, ord('d')]:
+                stdscr.addstr(5, 0, "Turning right         ")
+                set_right_turn()
+                enable_all_motors(1)
             elif key in [ord('q'), ord('Q')]:
-                stdscr.addstr(3, 0, "Stopping the robot.   ")
+                stdscr.addstr(5, 0, "Stopping the robot.   ")
                 enable_all_motors(0)
                 break
             else:
