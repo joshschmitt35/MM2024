@@ -1,4 +1,4 @@
-import keyboard
+import curses
 from gpiozero import OutputDevice, PWMOutputDevice
 from time import sleep
 
@@ -40,33 +40,41 @@ def enable_all_motors(state):
     """Enables or disables all motors."""
     FL_EN.value = BL_EN.value = FR_EN.value = BR_EN.value = state
 
-try:
-    print("Control the robot using 'W' (up arrow) for forward and 'S' (down arrow) for backward.")
-    print("Press 'Q' to quit.")
+def main(stdscr):
+    curses.curs_set(0)  # Hide the cursor
+    stdscr.nodelay(1)   # Non-blocking keyboard input
+    stdscr.clear()
+    stdscr.addstr("Control the robot using 'W' (up arrow) for forward and 'S' (down arrow) for backward.\n")
+    stdscr.addstr("Press 'Q' to quit.\n")
 
-    while True:
-        if keyboard.is_pressed('w') or keyboard.is_pressed('up'):
-            print("Moving forward")
-            set_all_motors(1)
-            enable_all_motors(1)
-            sleep(0.1)  # Add a small delay to avoid rapid toggling
-        elif keyboard.is_pressed('s') or keyboard.is_pressed('down'):
-            print("Moving backward")
-            set_all_motors(-1)
-            enable_all_motors(1)
-            sleep(0.1)
-        elif keyboard.is_pressed('q'):
-            print("Stopping the robot.")
-            enable_all_motors(0)
-            break
-        else:
-            enable_all_motors(0)  # Stop motors when no key is pressed
-            sleep(0.1)
-except KeyboardInterrupt:
-    print("Program stopped by user")
-    enable_all_motors(0)  # Disable all motors
-    # Set all control pins to 0 to safely stop motors
-    FL_IN1.value = FL_IN2.value = 0
-    BL_IN1.value = BL_IN2.value = 0
-    FR_IN1.value = FR_IN2.value = 0
-    BR_IN1.value = BR_IN2.value = 0
+    try:
+        while True:
+            key = stdscr.getch()
+            if key in [curses.KEY_UP, ord('w')]:
+                stdscr.addstr(3, 0, "Moving forward        ")
+                set_all_motors(1)
+                enable_all_motors(1)
+            elif key in [curses.KEY_DOWN, ord('s')]:
+                stdscr.addstr(3, 0, "Moving backward       ")
+                set_all_motors(-1)
+                enable_all_motors(1)
+            elif key in [ord('q'), ord('Q')]:
+                stdscr.addstr(3, 0, "Stopping the robot.   ")
+                enable_all_motors(0)
+                break
+            else:
+                enable_all_motors(0)  # Stop motors when no key is pressed
+
+            sleep(0.1)  # Small delay to avoid rapid toggling
+    except KeyboardInterrupt:
+        enable_all_motors(0)  # Disable all motors
+    finally:
+        # Cleanup
+        enable_all_motors(0)
+        FL_IN1.value = FL_IN2.value = 0
+        BL_IN1.value = BL_IN2.value = 0
+        FR_IN1.value = FR_IN2.value = 0
+        BR_IN1.value = BR_IN2.value = 0
+
+# Run the curses application
+curses.wrapper(main)
