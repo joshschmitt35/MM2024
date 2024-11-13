@@ -1,87 +1,67 @@
 from gpiozero import OutputDevice, PWMOutputDevice
 from time import sleep
 
-# Pin Definitions for Motor 1
-IN1_1 = OutputDevice(14)
-IN1_2 = OutputDevice(15)
-ENA = PWMOutputDevice(17)  # Enable for Motor 1
+# Pin Definitions for each motor
+# Front Left Motor
+FL_IN1 = OutputDevice(27)
+FL_IN2 = OutputDevice(17)
+FL_EN = PWMOutputDevice(22)
 
-# Pin Definitions for Motor 2
-IN2_1 = OutputDevice(18)
-IN2_2 = OutputDevice(23)
-ENB = PWMOutputDevice(27)  # Enable for Motor 2
+# Back Left Motor
+BL_IN1 = OutputDevice(26)
+BL_IN2 = OutputDevice(19)
+BL_EN = PWMOutputDevice(13)
 
-# Pin Definitions for Motor 3
-IN3_1 = OutputDevice(24)
-IN3_2 = OutputDevice(25)
-ENC = PWMOutputDevice(22)  # Enable for Motor 3
+# Front Right Motor
+FR_IN1 = OutputDevice(20)
+FR_IN2 = OutputDevice(21)
+FR_EN = PWMOutputDevice(16)
 
-# Pin Definitions for Motor 4
-IN4_1 = OutputDevice(5)
-IN4_2 = OutputDevice(6)
-END = PWMOutputDevice(13)  # Enable for Motor 4
+# Back Right Motor
+BR_IN1 = OutputDevice(24)
+BR_IN2 = OutputDevice(23)
+BR_EN = PWMOutputDevice(25)
 
-def set_direction(motor, direction):
-    """Sets the direction of a specified motor."""
-    if motor == 1:
-        if direction == 1:  # Forward
-            IN1_1.value = 1
-            IN1_2.value = 0
-        elif direction == -1:  # Backward
-            IN1_1.value = 0
-            IN1_2.value = 1
-    elif motor == 2:
-        if direction == 1:
-            IN2_1.value = 1
-            IN2_2.value = 0
-        elif direction == -1:
-            IN2_1.value = 0
-            IN2_2.value = 1
-    elif motor == 3:
-        if direction == 1:
-            IN3_1.value = 1
-            IN3_2.value = 0
-        elif direction == -1:
-            IN3_1.value = 0
-            IN3_2.value = 1
-    elif motor == 4:
-        if direction == 1:
-            IN4_1.value = 1
-            IN4_2.value = 0
-        elif direction == -1:
-            IN4_1.value = 0
-            IN4_2.value = 1
+def set_all_motors(direction):
+    """Sets the direction for all motors."""
+    if direction == 1:  # Forward
+        FL_IN1.value, FL_IN2.value = 1, 0
+        BL_IN1.value, BL_IN2.value = 1, 0
+        FR_IN1.value, FR_IN2.value = 1, 0
+        BR_IN1.value, BR_IN2.value = 1, 0
+    elif direction == -1:  # Backward
+        FL_IN1.value, FL_IN2.value = 0, 1
+        BL_IN1.value, BL_IN2.value = 0, 1
+        FR_IN1.value, FR_IN2.value = 0, 1
+        BR_IN1.value, BR_IN2.value = 0, 1
+
+def enable_all_motors(state):
+    """Enables or disables all motors."""
+    FL_EN.value = BL_EN.value = FR_EN.value = BR_EN.value = state
 
 try:
     while True:
-        motor = int(input("Enter motor number (1-4): "))
-        direction = int(input("Enter direction (1 for forward, -1 for backward): "))
-        
-        if motor == 1:
-            ENA.value = 1  # Enable Motor 1
-        elif motor == 2:
-            ENB.value = 1  # Enable Motor 2
-        elif motor == 3:
-            ENC.value = 1  # Enable Motor 3
-        elif motor == 4:
-            END.value = 1  # Enable Motor 4
-        
-        set_direction(motor, direction)
-        
-        sleep(0.1)  # Small delay to keep motors running
+        # Ask the user for the direction
+        direction = int(input("Enter direction for all motors (1 for forward, -1 for backward): "))
+        set_all_motors(direction)
+        enable_all_motors(1)  # Enable all motors
+
+        # Keep motors running until the user wants to stop or change direction
+        while True:
+            command = input("Enter 'stop' to stop all motors or 'change' to change direction: ").strip().lower()
+            if command == 'stop':
+                enable_all_motors(0)  # Disable all motors
+                print("All motors stopped.")
+                break
+            elif command == 'change':
+                break  # Break to the outer loop to change direction
+            else:
+                print("Invalid command. Please enter 'stop' or 'change'.")
 except KeyboardInterrupt:
     print("Program stopped by user")
-    
-    # Disable all motors
-    ENA.value = 0
-    ENB.value = 0
-    ENC.value = 0
-    END.value = 0
-    IN1_1.value = 0
-    IN1_2.value = 0
-    IN2_1.value = 0
-    IN2_2.value = 0
-    IN3_1.value = 0
-    IN3_2.value = 0
-    IN4_1.value = 0
-    IN4_2.value = 0
+    enable_all_motors(0)  # Disable all motors
+    # Set all control pins to 0 to safely stop motors
+    FL_IN1.value = FL_IN2.value = 0
+    BL_IN1.value = BL_IN2.value = 0
+    FR_IN1.value = FR_IN2.value = 0
+    BR_IN1.value = BR_IN2.value = 0
